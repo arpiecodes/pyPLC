@@ -167,10 +167,18 @@ class fsmEvse():
             if (strConverterResult.find("ChargeParameterDiscoveryReq")>0):
                 self.addToTrace("Received ChargeParameterDiscoveryReq. Extracting SoC parameters via DC")
                 jsondict = json.loads(strConverterResult)
+                ev_ready = int(jsondict.get("DC_EVStatus.EVReady", -1))
                 current_soc = int(jsondict.get("DC_EVStatus.EVRESSSOC", -1))
                 full_soc = int(jsondict.get("FullSOC", -1))
                 energy_capacity = int(jsondict.get("EVEnergyCapacity.Value", -1))
                 energy_request = int(jsondict.get("EVEnergyRequest.Value", -1))
+
+                # if the battery is fully charged, EVReady, EVRESSCOC and EVEnergyRequest all be 0
+                # in such case, we can assume current_soc = full_soc and energy_request = 0
+                if (full_soc > 0 and energy_request == 0 and current_soc == 0 and ev_ready == 0):
+                    current_soc = full_soc
+                    energy_request = 0
+
                 self.publishSoCs(current_soc, full_soc, energy_capacity, energy_request, origin="ChargeParameterDiscoveryReq")
 
                 # todo: check the request content, and fill response parameters

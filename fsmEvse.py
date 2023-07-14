@@ -175,9 +175,12 @@ class fsmEvse():
 
                 # if the battery is fully charged, EVReady, EVRESSCOC and EVEnergyRequest all be 0
                 # in such case, we can assume current_soc = full_soc and energy_request = 0
-                if (full_soc > 0 and energy_request == 0 and current_soc == 0 and ev_ready == 0):
-                    current_soc = full_soc
-                    energy_request = 0
+                # this is probably car/manufacturer specific, so we first check two digits of the evccid
+                # the evccid of (a/my) Polestar 2 starts with '48'
+                if (self.evccid != "" and self.evccid[:2] == "48"):
+                    if (full_soc > 0 and energy_request == 0 and current_soc == 0 and ev_ready == 0):
+                        current_soc = full_soc
+                        energy_request = 0
 
                 self.publishSoCs(current_soc, full_soc, energy_capacity, energy_request, origin="ChargeParameterDiscoveryReq")
 
